@@ -69,7 +69,7 @@ jobs:
           az rest --method POST \
             --url "${FOUNDRY_ENDPOINT}/agents/handoff-service/versions?api-version=2025-11-15-preview" \
             --headers "Content-Type=application/json" \
-            --resource "https://cognitiveservices.azure.com" \
+            --resource "https://ai.azure.com" \
             --body @/tmp/agent-payload.json
 
           echo "Handoff service agent deployed successfully."
