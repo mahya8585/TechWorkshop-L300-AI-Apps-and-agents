@@ -28,8 +28,10 @@ jobs:
           echo "Active subscription: $(az account show --query name -o tsv)"
 
       - name: Setup environment variables
+        env:
+          ENV_CONTENT: ${{ secrets.ENV }}
         run: |
-          echo "${{ secrets.ENV }}" > /tmp/.env
+          printf '%s' "$ENV_CONTENT" > /tmp/.env
           cat > /tmp/parse_env.py << 'PYEOF'
           import os
           vals = {}
