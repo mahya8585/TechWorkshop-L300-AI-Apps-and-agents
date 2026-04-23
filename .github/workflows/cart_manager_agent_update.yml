@@ -53,10 +53,10 @@ jobs:
         run: |
           # Read the prompt file and escape it for JSON
           INSTRUCTIONS=$(python3 -c "
-          import json, sys
-          with open('src/prompts/CartManagerPrompt.txt', 'r') as f:
-              print(json.dumps(f.read()))
-          ")
+import json
+with open('src/prompts/CartManagerPrompt.txt', 'r') as f:
+    print(json.dumps(f.read()))
+")
 
           # Build the request body from the template, substituting variables
           jq --arg model "$GPT_DEPLOYMENT" \
@@ -64,14 +64,13 @@ jobs:
              '.definition.model = $model | .definition.instructions = $instructions' \
              src/infra/agents/cart-manager.json > /tmp/agent-payload.json
 
-          # Get access token for Azure AI Foundry
-          TOKEN=$(az account get-access-token --resource "https://cognitiveservices.azure.com" --query accessToken -o tsv)
+          echo "--- Payload preview ---"
+          cat /tmp/agent-payload.json
 
-          # Create/update the agent version via Foundry REST API
-          curl -f -X POST \
-            "${FOUNDRY_ENDPOINT}/agents/cart-manager/versions?api-version=2025-11-15-preview" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d @/tmp/agent-payload.json
+          # Deploy via az rest (handles token acquisition automatically)
+          az rest --method POST \
+            --url "${FOUNDRY_ENDPOINT}/agents/cart-manager/versions?api-version=2025-11-15-preview" \
+            --headers "Content-Type=application/json" \
+            --body @/tmp/agent-payload.json
 
           echo "Cart manager agent deployed successfully."
