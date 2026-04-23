@@ -65,7 +65,7 @@ jobs:
              src/infra/agents/customer-loyalty.json > /tmp/agent-payload.json
 
           # Get access token for Azure AI Foundry
-          TOKEN=$(az account get-access-token --resource "https://ai.azure.com" --query accessToken -o tsv)
+          TOKEN=$(az account get-access-token --resource "https://cognitiveservices.azure.com" --query accessToken -o tsv)
 
           # Create/update the agent version via Foundry REST API
           curl -f -X POST \
