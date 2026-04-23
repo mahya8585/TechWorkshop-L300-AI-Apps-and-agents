@@ -30,12 +30,21 @@ jobs:
       - name: Setup environment variables
         run: |
           echo "${{ secrets.ENV }}" > /tmp/.env
-          FOUNDRY_ENDPOINT=$(grep -E '^FOUNDRY_ENDPOINT=' /tmp/.env | head -1 | cut -d'=' -f2- | tr -d '"')
-          GPT_DEPLOYMENT=$(grep -E '^gpt_deployment=' /tmp/.env | head -1 | cut -d'=' -f2- | tr -d '"')
-          echo "FOUNDRY_ENDPOINT=$FOUNDRY_ENDPOINT" >> $GITHUB_ENV
-          echo "GPT_DEPLOYMENT=$GPT_DEPLOYMENT" >> $GITHUB_ENV
-          echo "Debug - FOUNDRY_ENDPOINT: $FOUNDRY_ENDPOINT"
-          echo "Debug - GPT_DEPLOYMENT: $GPT_DEPLOYMENT"
+          python3 -c "
+          import re, os
+          vals = {}
+          with open('/tmp/.env') as f:
+              for line in f:
+                  line = line.strip().strip('\r')
+                  m = re.match(r'^([A-Za-z0-9_]+)=\"?([^\"]*)\"?$', line)
+                  if m:
+                      vals[m.group(1)] = m.group(2)
+          with open(os.environ['GITHUB_ENV'], 'a') as genv:
+              genv.write('FOUNDRY_ENDPOINT=' + vals.get('FOUNDRY_ENDPOINT', '') + '\n')
+              genv.write('GPT_DEPLOYMENT=' + vals.get('gpt_deployment', '') + '\n')
+          print('FOUNDRY_ENDPOINT:', vals.get('FOUNDRY_ENDPOINT', '(empty)'))
+          print('GPT_DEPLOYMENT:', vals.get('gpt_deployment', '(empty)'))
+          "
 
       - name: Deploy inventory-agent to Foundry
         run: |
