@@ -29,10 +29,13 @@ jobs:
 
       - name: Setup environment variables
         run: |
-          echo "${{ secrets.ENV }}" > .env
-          source .env
+          echo "${{ secrets.ENV }}" > /tmp/.env
+          FOUNDRY_ENDPOINT=$(grep -E '^FOUNDRY_ENDPOINT=' /tmp/.env | head -1 | cut -d'=' -f2- | tr -d '"')
+          GPT_DEPLOYMENT=$(grep -E '^gpt_deployment=' /tmp/.env | head -1 | cut -d'=' -f2- | tr -d '"')
           echo "FOUNDRY_ENDPOINT=$FOUNDRY_ENDPOINT" >> $GITHUB_ENV
-          echo "GPT_DEPLOYMENT=$gpt_deployment" >> $GITHUB_ENV
+          echo "GPT_DEPLOYMENT=$GPT_DEPLOYMENT" >> $GITHUB_ENV
+          echo "Debug - FOUNDRY_ENDPOINT: $FOUNDRY_ENDPOINT"
+          echo "Debug - GPT_DEPLOYMENT: $GPT_DEPLOYMENT"
 
       - name: Deploy cart-manager agent to Foundry
         run: |
