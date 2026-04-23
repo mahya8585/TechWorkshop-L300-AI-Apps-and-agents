@@ -51,14 +51,13 @@ jobs:
 
       - name: Deploy interior-designer agent to Foundry
         run: |
-          # Read the prompt file and escape it for JSON
-          INSTRUCTIONS=$(python3 -c "
-import json
-with open('src/prompts/InteriorDesignAgentPrompt.txt', 'r') as f:
-    print(json.dumps(f.read()))
-")
+          cat > /tmp/read_prompt.py << 'PYEOF'
+          import json
+          with open('src/prompts/InteriorDesignAgentPrompt.txt', 'r') as f:
+              print(json.dumps(f.read()))
+          PYEOF
+          INSTRUCTIONS=$(python3 /tmp/read_prompt.py)
 
-          # Build the request body from the template, substituting variables
           jq --arg model "$GPT_DEPLOYMENT" \
              --argjson instructions "$INSTRUCTIONS" \
              '.definition.model = $model | .definition.instructions = $instructions' \
@@ -67,7 +66,6 @@ with open('src/prompts/InteriorDesignAgentPrompt.txt', 'r') as f:
           echo "--- Payload preview ---"
           cat /tmp/agent-payload.json
 
-          # Deploy via az rest (handles token acquisition automatically)
           az rest --method POST \
             --url "${FOUNDRY_ENDPOINT}/agents/interior-designer/versions?api-version=2025-11-15-preview" \
             --headers "Content-Type=application/json" \
