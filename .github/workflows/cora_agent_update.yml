@@ -30,21 +30,22 @@ jobs:
       - name: Setup environment variables
         run: |
           echo "${{ secrets.ENV }}" > /tmp/.env
-          python3 -c "
-          import re, os
+          cat > /tmp/parse_env.py << 'PYEOF'
+          import os
           vals = {}
-          with open('/tmp/.env') as f:
-              for line in f:
-                  line = line.strip().strip('\r')
-                  m = re.match(r'^([A-Za-z0-9_]+)=\"?([^\"]*)\"?$', line)
-                  if m:
-                      vals[m.group(1)] = m.group(2)
+          for line in open('/tmp/.env').read().splitlines():
+              line = line.strip()
+              if line.startswith('#') or '=' not in line:
+                  continue
+              key, _, val = line.partition('=')
+              vals[key.strip()] = val.strip().strip('"').strip("'")
           with open(os.environ['GITHUB_ENV'], 'a') as genv:
               genv.write('FOUNDRY_ENDPOINT=' + vals.get('FOUNDRY_ENDPOINT', '') + '\n')
               genv.write('GPT_DEPLOYMENT=' + vals.get('gpt_deployment', '') + '\n')
           print('FOUNDRY_ENDPOINT:', vals.get('FOUNDRY_ENDPOINT', '(empty)'))
           print('GPT_DEPLOYMENT:', vals.get('gpt_deployment', '(empty)'))
-          "
+          PYEOF
+          python3 /tmp/parse_env.py
 
       - name: Deploy cora agent to Foundry
         run: |
